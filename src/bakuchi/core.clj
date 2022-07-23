@@ -1,44 +1,38 @@
 (ns bakuchi.core
   (:require
-    [bakuchi.app :as app]
-    [chime.core :as chime])
+   [bakuchi.app :as app]
+   [chime.core :as chime])
   (:import
-    (java.time
-      Duration
-      Instant)))
-
+   (java.time
+    Duration
+    Instant)))
 
 (def app (atom nil))
-
 
 (defn start
   []
   (println "Bot started.")
   (deref @app))
 
-
 (defn stop
   []
   (.close @@app))
 
-
 (defn- make-periodic-seq
   [interval]
   (chime/periodic-seq
-    (Instant/now)
-    (Duration/ofSeconds interval)))
-
+   (Instant/now)
+   (Duration/ofSeconds interval)))
 
 (defn init
   []
   (reset! app
           (delay (chime/chime-at
-                   (make-periodic-seq 3)
-                   app/step
-                   {:on-finished
-                    (fn []
-                      (println "Bot finished."))}))))
-
+                  (make-periodic-seq 3)
+                  app/step
+                  {:on-finished
+                   (fn []
+                     (println "Bot finished."))}))))
 
 ;;
 
@@ -47,7 +41,6 @@
   (start)
   (stop)
   )
-
 
 (comment
 

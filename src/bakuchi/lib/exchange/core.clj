@@ -1,6 +1,6 @@
-(ns bakuchi.lib
+(ns bakuchi.lib.exchange.core
   (:require
-   [bakuchi.api :as api]))
+   [bakuchi.lib.exchange.bitflyer :as api]))
 
 (def lot 0.001)
 

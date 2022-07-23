@@ -1,6 +1,6 @@
 (ns bakuchi.app
   (:require
-   [bakuchi.lib :as lib]))
+   [bakuchi.lib.exchange.core :as ex]))
 
 (def position (atom "none"))
 (def ask-status (atom "closed"))
@@ -19,7 +19,7 @@
 
 (defn step-none->entry!
   []
-  (let [{:keys [spread-rate] :as tick} (lib/get-best-tick)]
+  (let [{:keys [spread-rate] :as tick} (ex/get-best-tick)]
     (println tick)
     (when (> spread-rate spread-entry)
       (swap! position update-position)
@@ -29,7 +29,7 @@
 
 (defn step-entry->none!
   []
-  (let [{:keys [spread-rate] :as tick} (lib/get-best-tick)]
+  (let [{:keys [spread-rate] :as tick} (ex/get-best-tick)]
     (println tick)
     (when (> spread-rate spread-cancel)
       (swap! position update-position)

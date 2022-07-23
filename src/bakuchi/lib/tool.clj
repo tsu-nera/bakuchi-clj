@@ -1,13 +1,12 @@
-(ns bakuchi.tool
+(ns bakuchi.lib.tool
   (:require
-    [clojure.edn :as edn]
-    [clojure.java.io :as io])
+   [clojure.edn :as edn]
+   [clojure.java.io :as io])
   (:import
-    (javax.crypto
-      Mac)
-    (javax.crypto.spec
-      SecretKeySpec)))
-
+   (javax.crypto
+    Mac)
+   (javax.crypto.spec
+    SecretKeySpec)))
 
 (defn load-edn
   [file-path]
@@ -16,17 +15,14 @@
         slurp
         edn/read-string)))
 
-
 (defn secretKeyInst
   [key mac]
   (SecretKeySpec. (.getBytes key) (.getAlgorithm mac)))
-
 
 (defn toHexString
   "Convert bytes to a String"
   [bytes]
   (apply str (map #(format "%02x" %) bytes)))
-
 
 (defn sign
   "Returns the signature of a string with a given
@@ -40,7 +36,6 @@
           (.update (.getBytes text)))
         .doFinal
         toHexString)))
-
 
 (comment
 
