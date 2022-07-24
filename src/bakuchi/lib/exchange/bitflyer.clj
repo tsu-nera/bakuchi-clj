@@ -1,5 +1,6 @@
 (ns bakuchi.lib.exchange.bitflyer
   (:require
+   [bakuchi.lib.exchange.client :as c]
    [bakuchi.lib.tool :as tool]
    [camel-snake-kebab.core :as csk]
    [camel-snake-kebab.extras :as cske]
@@ -50,17 +51,6 @@
      "ACCESS-TIMESTAMP" timestamp
      "ACCESS-SIGN"      sign}))
 
-(defn get-public
-  [path]
-  (let [url     (->url path)
-        options {:as            :json
-                 :query-params  base-params
-                 :cookie-policy :standard}]
-    (when-let [resp (client/get url options)]
-      (->> resp
-           :body
-           (cske/transform-keys csk/->kebab-case)))))
-
 (defn path->with-query-string
   [path & {:as params}]
   (cond-> path
@@ -96,6 +86,9 @@
       (->> resp
            :body
            (cske/transform-keys csk/->kebab-case)))))
+
+(defn get-public [path]
+  (c/get-public (->url path)  base-params))
 
 (defn fetch-markets
   []

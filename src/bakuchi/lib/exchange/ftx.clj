@@ -1,9 +1,8 @@
 (ns bakuchi.lib.exchange.ftx
   (:require
+   [bakuchi.lib.exchange.client :as client]
    [bakuchi.lib.exchange.interface :as if]
-   [bakuchi.lib.tool :as tool]
-   [cheshire.core :refer [generate-string]]
-   [clj-http.client :as client]))
+   [bakuchi.lib.tool :as tool]))
 
 (def creds-file "creds.edn")
 (def creds
@@ -11,11 +10,17 @@
       tool/load-edn
       :ftx))
 
+(def base-url "https://ftx.com/api")
+
+(defn get-public [path]
+  (let [url (client/->url base-url path)]
+    (client/get-public url)))
+
 (defrecord FTX
   [api-key api-secret]
   if/Public
   (fetch-ticker [this]
-    (client/get "https://ftx.com/api/markets")))
+    (get-public "/markets/BTC_JPY")))
 
 (def ftx (map->FTX creds))
 
