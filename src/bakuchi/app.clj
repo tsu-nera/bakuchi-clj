@@ -1,6 +1,7 @@
 (ns bakuchi.app
   (:require
-   [bakuchi.lib.exchange.core :as ex]))
+   [bakuchi.lib.exchange.ftx :refer [ftx] :rename {ftx ex}]
+   [bakuchi.lib.exchange.interface :as if]))
 
 (def position (atom "none"))
 (def ask-status (atom "closed"))
@@ -20,7 +21,7 @@
 
 (defn step-none->entry!
   []
-  (let [{:keys [spread-rate] :as tick} (ex/get-best-tick)]
+  (let [{:keys [spread-rate] :as tick} (if/get-best-tick ex)]
     (println tick)
     (when (> spread-rate spread-entry)
       (swap! position update-position)
@@ -30,7 +31,7 @@
 
 (defn step-entry->none!
   []
-  (let [{:keys [spread-rate] :as tick} (ex/get-best-tick)]
+  (let [{:keys [spread-rate] :as tick} (if/get-best-tick ex)]
     (println tick)
     (when (> spread-rate spread-cancel)
       (swap! position update-position)
