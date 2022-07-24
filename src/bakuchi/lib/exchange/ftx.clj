@@ -18,11 +18,17 @@
     (client/get-public url)))
 
 (defrecord FTX
-  [api-key api-secret]
+  [api-key api-secret symbol]
 
   if/Public
-  (fetch-ticker [_]
-    (get-public "/markets/BTC_JPY"))
+  (fetch-ticker [this]
+    (let [market-name (:symbol this)
+          path        (str "/markets" "/" market-name)]
+      (get-public path)))
+  (fetch-orderbook [this]
+    (let [market-name (:symbol this)
+          path        (str "/markets" "/" market-name "/orderbook")]
+      (get-public path)))
 
   if/Library
   (get-best-tick [this]
@@ -31,9 +37,15 @@
           bid  (-> tick :bid)]
       (lib/->best-tick ask bid))))
 
-(def ftx (map->FTX creds))
+(def ftx (map->FTX (merge creds {:symbol "BTC_JPY"})))
 
 (comment
   (if/fetch-ticker ftx)
+  (if/fetch-orderbook ftx)
+
+
+  )
+
+(comment
   (if/get-best-tick ftx)
   )

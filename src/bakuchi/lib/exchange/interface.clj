@@ -4,7 +4,8 @@
 ;; https://docs.ccxt.com/en/latest/manual.html
 
 (defprotocol Public
-  (fetch-ticker [this]))
+  (fetch-ticker [this])
+  (fetch-orderbook [this]))
 
 (defprotocol Private)
 

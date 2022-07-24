@@ -8,6 +8,7 @@
 
 (def spread-entry 0.005)
 (def spread-cancel 0.003)
+(def product-code "BTC_JPY")
 
 (defn update-position
   [current]
