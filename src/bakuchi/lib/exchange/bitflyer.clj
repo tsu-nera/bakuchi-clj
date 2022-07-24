@@ -21,7 +21,10 @@
   (str base-url path))
 
 (def creds-file "creds.edn")
-(def creds (tool/load-edn creds-file))
+(def creds
+  (-> creds-file
+      tool/load-edn
+      :bitflyer))
 
 (defn ->timestamp
   []
@@ -97,33 +100,28 @@
 (defn fetch-markets
   []
   (get-public "/v1/markets"))
-
 #_(fetch-markets)
 
 (defn fetch-order-book
   []
   (get-public "/v1/board"))
-
 #_(fetch-order-book)
 
 (defn fetch-tick
   []
   (get-public "/v1/ticker"))
-
 #_(fetch-tick)
 
 (defn fetch-balance
   "資産残高を取得"
   []
   (get-private "/v1/me/getbalance"))
-
 #_(fetch-balance)
 
 (defn fetch-collateral
   "証拠金の状態を取得"
   []
   (get-private "/v1/me/getcollateral"))
-
 #_(fetch-collateral)
 
 (defn create-order
@@ -142,7 +140,6 @@
   "TODO オプションいろいろあるので用途ごとにラッパー関数を作成する"
   [& [query-params]]
   (get-private "/v1/me/getchildorders" query-params))
-
 #_(fetch-orders)
 
 (comment
