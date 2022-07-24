@@ -7,6 +7,9 @@
     Duration
     Instant)))
 
+;; integrant configuration map
+(def config-file "config.edn")
+
 (def app (atom nil))
 
 (defn start
