@@ -1,11 +1,10 @@
 (ns bakuchi.lib.exchange.bitflyer
   (:require
-   [bakuchi.lib.exchange.client :as c]
+   [bakuchi.lib.exchange.client :as client]
    [bakuchi.lib.tool :as tool]
    [camel-snake-kebab.core :as csk]
    [camel-snake-kebab.extras :as cske]
-   [cheshire.core :refer [generate-string]]
-   [clj-http.client :as client])
+   [cheshire.core :refer [generate-string]])
   (:import
    (java.time
     Instant)))
@@ -16,10 +15,6 @@
 (def base-params {"product_code" product-code})
 
 (def base-url "https://api.bitflyer.com")
-
-(defn ->url
-  [path]
-  (str base-url path))
 
 (def creds-file "creds.edn")
 (def creds
@@ -51,43 +46,23 @@
      "ACCESS-TIMESTAMP" timestamp
      "ACCESS-SIGN"      sign}))
 
-(defn path->with-query-string
-  [path & {:as params}]
-  (cond-> path
-    params (str "?" (client/generate-query-string params))))
-
-(defn get-private
-  [pathname & {:as params}]
-  (let [query-params (merge base-params params)
-        path         (path->with-query-string pathname query-params)
-        headers      (->signed-headers "GET" path)
-        url          (->url path)]
-    (when-let [resp (client/get url
-                                {:headers       headers
-                                 :as            :json
-                                 :content-type  :json
-                                 :cookie-policy :standard})]
-      (->> resp
-           :body
-           (cske/transform-keys csk/->kebab-case)))))
-
-(defn post-private
-  [path params]
-  (let [headers (->signed-headers "POST" path params)
-        url     (->url path)
-        body    (generate-string params)]
-    (when-let [resp (client/post url
-                                 {:headers       headers
-                                  :body          body
-                                  :content-type  :json
-                                  :as            :json
-                                  :cookie-policy :standard})]
-      (->> resp
-           :body
-           (cske/transform-keys csk/->kebab-case)))))
+#_(defn post-private
+    [path params]
+    (let [headers (->signed-headers "POST" path params)
+          url     (client/->url path)
+          body    (generate-string params)]
+      (when-let [resp (client/post url
+                                   {:headers       headers
+                                    :body          body
+                                    :content-type  :json
+                                    :as            :json
+                                    :cookie-policy :standard})]
+        (->> resp
+             :body
+             (cske/transform-keys csk/->kebab-case)))))
 
 (defn get-public [path]
-  (c/get-public (->url path)  base-params))
+  (client/get (client/->url path) base-params))
 
 (defn fetch-markets
   []
@@ -104,34 +79,34 @@
   (get-public "/v1/ticker"))
 #_(fetch-tick)
 
-(defn fetch-balance
-  "資産残高を取得"
-  []
-  (get-private "/v1/me/getbalance"))
+#_(defn fetch-balance
+    "資産残高を取得"
+    []
+    (get-private "/v1/me/getbalance"))
 #_(fetch-balance)
 
-(defn fetch-collateral
-  "証拠金の状態を取得"
-  []
-  (get-private "/v1/me/getcollateral"))
+#_(defn fetch-collateral
+    "証拠金の状態を取得"
+    []
+    (get-private "/v1/me/getcollateral"))
 #_(fetch-collateral)
 
-(defn create-order
-  [params]
-  (let [path       "/v1/me/sendchildorder"
-        req-params (merge base-params params)]
-    (post-private path req-params)))
+#_(defn create-order
+    [params]
+    (let [path       "/v1/me/sendchildorder"
+          req-params (merge base-params params)]
+      (post-private path req-params)))
 
-(defn cancel-order
-  [id]
-  (let [path       "/v1/me/cancelchildorder"
-        req-params (merge base-params {"child_order_acceptance_id" id})]
-    (post-private path req-params)))
+#_(defn cancel-order
+    [id]
+    (let [path       "/v1/me/cancelchildorder"
+          req-params (merge base-params {"child_order_acceptance_id" id})]
+      (post-private path req-params)))
 
-(defn fetch-orders
-  "TODO オプションいろいろあるので用途ごとにラッパー関数を作成する"
-  [& [query-params]]
-  (get-private "/v1/me/getchildorders" query-params))
+#_(defn fetch-orders
+    "TODO オプションいろいろあるので用途ごとにラッパー関数を作成する"
+    [& [query-params]]
+    (get-private "/v1/me/getchildorders" query-params))
 #_(fetch-orders)
 
 (comment
@@ -140,7 +115,7 @@
   (def path "/v1/me/getbalance")
   ;; (def path "/v1/me/getcollateral")
   (def headers (->signed-headers method path))
-  (def url (->url path))
+  (def url (client/->url path))
 
   (-> (client/get url
                   {:headers       headers
@@ -148,12 +123,4 @@
                    :content-type  :json
                    :cookie-policy :standard})
       :body)
-  )
-
-(comment
-
-  (def query-params {:a 1 :b 2})
-  (client/generate-query-string query-params)
-  (path->with-query-string "/v1/hoge" query-params)
-
   )

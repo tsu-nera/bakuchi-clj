@@ -1,2 +1,3 @@
 ;; configuration maps for integrant
-{:bakuchi.service.trade/bot {}}
+{:bakuchi.service.logging/logger {}
+ :bakuchi.service.trade/bot      {}}

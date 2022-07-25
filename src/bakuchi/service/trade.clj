@@ -2,6 +2,7 @@
   (:require
    [bakuchi.strategy.mm :as app]
    [chime.core :as chime]
+   [clojure.tools.logging :as log]
    [integrant.core :as ig])
   (:import
    (java.time
@@ -16,12 +17,13 @@
 
 (defn start
   []
+  (log/info "Bot started.")
   (chime/chime-at
    (make-periodic-seq 3)
    app/step
    {:on-finished
     (fn []
-      (println "Bot finished."))}))
+      (log/info "Bot finished."))}))
 
 (defmethod ig/init-key ::bot [_ _]
   (start))

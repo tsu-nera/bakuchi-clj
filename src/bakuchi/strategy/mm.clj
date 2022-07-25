@@ -39,11 +39,11 @@
       (swap! bid-status update-status)
       (println "entry -> none"))))
 
-(defn step
-  [time]
+(defn step [_]
   (if (= @position "none")
     (step-none->entry!)
     (step-entry->none!)))
+#_(step nil)
 
 (comment
   (swap! position update-position)
