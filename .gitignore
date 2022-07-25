@@ -16,4 +16,5 @@ pom.xml.asc
 /.prepl-port
 /.cpcache
 
-resources/creds.edn
+resources
+logs

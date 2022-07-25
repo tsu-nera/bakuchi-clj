@@ -19,7 +19,7 @@
   []
   (log/info "Bot started.")
   (chime/chime-at
-   (make-periodic-seq 3)
+   (make-periodic-seq 5)
    app/step
    {:on-finished
     (fn []
