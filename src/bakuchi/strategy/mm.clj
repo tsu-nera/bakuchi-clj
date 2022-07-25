@@ -1,4 +1,4 @@
-(ns bakuchi.app
+(ns bakuchi.strategy.mm
   (:require
    [bakuchi.lib.exchange.ftx :refer [ftx] :rename {ftx ex}]
    [bakuchi.lib.exchange.interface :as if]))

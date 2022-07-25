@@ -1,0 +1,2 @@
+;; configuration maps for integrant
+{:bakuchi.service.bot/app {}}
