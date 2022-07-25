@@ -40,7 +40,7 @@
   [timestamp method path & {:as params}]
   (let [key  (:api-secret creds)
         text (->signature-text timestamp method path params)]
-    (tool/sign key text)))
+    (tool/->sign key text)))
 
 (defn ->signed-headers
   [method path & {:as params}]
@@ -63,10 +63,9 @@
         headers      (->signed-headers "GET" path)
         url          (->url path)]
     (when-let [resp (client/get url
-                                {:headers      headers
-                                 :as           :json
-                                 :content-type :json
-
+                                {:headers       headers
+                                 :as            :json
+                                 :content-type  :json
                                  :cookie-policy :standard})]
       (->> resp
            :body

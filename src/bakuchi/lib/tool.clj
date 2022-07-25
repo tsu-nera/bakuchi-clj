@@ -24,7 +24,7 @@
   [bytes]
   (apply str (map #(format "%02x" %) bytes)))
 
-(defn sign
+(defn ->sign
   "Returns the signature of a string with a given
   key, using a SHA-256 HMAC."
   [key text]
@@ -53,7 +53,7 @@
 
   (=
    (toHexString signed-bytes)
-   (sign secret-key text)
+   (->sign secret-key text)
    )
 
   )

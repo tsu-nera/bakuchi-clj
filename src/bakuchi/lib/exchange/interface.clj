@@ -7,7 +7,11 @@
   (fetch-ticker [this])
   (fetch-orderbook [this]))
 
-(defprotocol Private)
+(defprotocol Private
+  (fetch-balance [this])
+  (fetch-order [this id])
+  (create-order [this])
+  (cancel-order [this]))
 
 (defprotocol Library
   (get-best-tick [this] "最良価格を取得")

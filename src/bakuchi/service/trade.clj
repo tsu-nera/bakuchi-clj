@@ -1,4 +1,4 @@
-(ns bakuchi.service.bot
+(ns bakuchi.service.trade
   (:require
    [bakuchi.strategy.mm :as app]
    [chime.core :as chime]
@@ -14,7 +14,7 @@
    (Instant/now)
    (Duration/ofSeconds interval)))
 
-(defn init
+(defn start
   []
   (chime/chime-at
    (make-periodic-seq 3)
@@ -23,10 +23,10 @@
     (fn []
       (println "Bot finished."))}))
 
-(defmethod ig/init-key ::app [_ _]
-  (init))
+(defmethod ig/init-key ::bot [_ _]
+  (start))
 
-(defmethod ig/halt-key! ::app [_ app]
+(defmethod ig/halt-key! ::bot [_ app]
   (.close app))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
