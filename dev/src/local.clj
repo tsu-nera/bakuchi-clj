@@ -5,12 +5,14 @@
    [integrant.repl :as igr]
    [integrant.repl.state :refer [config system]]))
 
-(defn start []
+(defn init []
   (-> core/config-file
       core/load-config
       constantly
       igr/set-prep!)
-  (igr/prep)
+  (igr/prep))
+
+(defn start []
   (igr/init))
 
 (defn stop []
@@ -20,6 +22,7 @@
   (igr/reset-all))
 
 (comment
+  (init)
   (start)
   (stop)
   (restart))
