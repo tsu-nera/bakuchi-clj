@@ -25,8 +25,8 @@
         bid         (:bid tick)
         spread      (:spread tick)
         spread-rate (:spread-rate tick)
-        out         (format "ask=%.2f, bid=%.2f, spread=%.0f(%.5f)"
-                            ask bid spread spread-rate)]
+        out         (format "spread=%.0f(%.5f), ask=%.0f, bid=%.0f"
+                            spread spread-rate ask bid)]
     (log/debug out)))
 
 (defn step-none->entry!

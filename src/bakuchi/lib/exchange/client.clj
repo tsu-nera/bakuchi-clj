@@ -24,6 +24,10 @@
   (cond-> (str timestamp "POST" path)
     body (str (generate-string body))))
 
+(defn ->delete-signature-text
+  [timestamp path]
+  (str timestamp "DELETE" path))
+
 (defn get
   [url & {:keys [payload headers]}]
   (let [options {:as            :json
@@ -31,6 +35,28 @@
                  :headers       headers
                  :cookie-policy :standard}]
     (when-let [resp (client/get url options)]
+      (->> resp
+           :body
+           (cske/transform-keys csk/->kebab-case)))))
+
+(defn post
+  [url & {:keys [params headers]}]
+  (let [options {:form-params   params
+                 :headers       headers
+                 :as            :json
+                 :content-type  :json
+                 :cookie-policy :standard}]
+    (when-let [resp (client/post url options)]
+      (->> resp
+           :body
+           (cske/transform-keys csk/->kebab-case)))))
+
+(defn delete
+  [url & {:keys [headers]}]
+  (let [options {:headers       headers
+                 :as            :json
+                 :cookie-policy :standard}]
+    (when-let [resp (client/delete url options)]
       (->> resp
            :body
            (cske/transform-keys csk/->kebab-case)))))
