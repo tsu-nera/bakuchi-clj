@@ -16,19 +16,25 @@
    (Duration/ofSeconds interval)))
 
 (defn start
-  []
+  [fsm]
   (log/info "=========================")
   (log/info "=== Trading Bot Start ===")
   (log/info "=========================")
   (chime/chime-at
    (make-periodic-seq 5)
-   app/step
+   (fn [_]
+     (app/step! fsm))
    {:on-finished
     (fn []
       (log/info "=== Trading Bot End ==="))}))
 
-(defmethod ig/init-key ::bot [_ _]
-  (start))
+(defmethod ig/init-key ::fsm [_ _]
+  (let [service (app/init)]
+    (app/start! service)
+    service))
+
+(defmethod ig/init-key ::bot [_ fsm]
+  (start fsm))
 
 (defmethod ig/halt-key! ::bot [_ app]
   (.close app))

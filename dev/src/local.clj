@@ -13,7 +13,7 @@
   (igr/prep))
 
 (defn start []
-  (igr/init))
+  (igr/go))
 
 (defn stop []
   (igr/halt))
@@ -21,8 +21,12 @@
 (defn restart []
   (igr/reset-all))
 
+(defn clear []
+  (igr/clear))
+
 (comment
   (init)
   (start)
   (stop)
+  (clear)
   (restart))
