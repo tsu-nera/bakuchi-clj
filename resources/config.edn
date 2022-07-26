@@ -1,4 +1,4 @@
 ;; configuration maps for integrant
 {:bakuchi.service.logging/logger {}
- :bakuchi.service.trade/fsm      {}
+ :bakuchi.service.trade/fsm      #ig/ref :bakuchi.service.logging/logger
  :bakuchi.service.trade/bot      #ig/ref :bakuchi.service.trade/fsm}

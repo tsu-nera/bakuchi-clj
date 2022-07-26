@@ -14,8 +14,26 @@
       (doto
        ig/load-namespaces)))
 
+(defonce ^:private system nil)
+
+(def alter-system (partial alter-var-root #'system))
+
+(defn start-system! []
+  (alter-system (constantly
+                 (-> config-file
+                     load-config
+                     (ig/init)))))
+
+(defn stop-system! []
+  (alter-system ig/halt!))
+
 (defn -main
-  [& args]
-  (-> config-file
-      load-config
-      ig/init))
+  [& _args]
+  (start-system!))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(comment
+  (start-system!)
+  (stop-system!)
+  )
