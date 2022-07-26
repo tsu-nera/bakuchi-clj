@@ -5,7 +5,8 @@
   org.clojure/clojure {:mvn/version "1.11.1"}
 
   ;; 状態管理
-  integrant/integrant {:mvn/version "0.8.0"}
+  integrant/integrant             {:mvn/version "0.8.0"}
+  clj-statecharts/clj-statecharts {:mvn/version "0.1.5"}
 
   ;; http client
   clj-http/clj-http {:mvn/version "3.12.3"}

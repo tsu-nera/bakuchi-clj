@@ -98,7 +98,7 @@
 
   if/Library
   (get-best-tick [this]
-    (let [tick (:result (.fetch-ticker this))
+    (let [tick (.fetch-ticker this)
           ask  (-> tick :ask)
           bid  (-> tick :bid)]
       (lib/->best-tick ask bid))))

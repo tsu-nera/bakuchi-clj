@@ -17,13 +17,15 @@
 
 (defn start
   []
-  (log/info "Bot started.")
+  (log/info "=========================")
+  (log/info "=== Trading Bot Start ===")
+  (log/info "=========================")
   (chime/chime-at
    (make-periodic-seq 5)
    app/step
    {:on-finished
     (fn []
-      (log/info "Bot finished."))}))
+      (log/info "=== Trading Bot End ==="))}))
 
 (defmethod ig/init-key ::bot [_ _]
   (start))

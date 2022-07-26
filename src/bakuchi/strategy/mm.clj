@@ -2,7 +2,8 @@
   (:require
    [bakuchi.lib.exchange.ftx :refer [ftx] :rename {ftx ex}]
    [bakuchi.lib.exchange.interface :as if]
-   [clojure.tools.logging :as log]))
+   [clojure.tools.logging :as log]
+   [statecharts.core :as fsm]))
 
 (def position (atom "none"))
 (def ask-status (atom "closed"))
@@ -42,7 +43,7 @@
 (defn step-entry->none!
   []
   (let [{:keys [spread-rate] :as tick} (if/get-best-tick ex)]
-    (println tick)
+    (logging-tick tick)
     (when (> spread-rate spread-cancel)
       (swap! position update-position)
       (swap! ask-status update-status)
@@ -58,4 +59,61 @@
 (comment
   (swap! position update-position)
   (swap! ask-status update-status)
+  )
+
+(comment
+
+  (defn entry-orders? [_ {:keys [spread-rate]}]
+    (> spread-rate spread-entry))
+
+  (defn cancel-order? [_ {:keys [spread-rate]}]
+    (> spread-rate spread-cancel))
+
+
+  (defn both-closed? [state _]
+    (let [ask-state (get-in state [:_state :entry :entry.ask])
+          bid-state (get-in state [:_state :entry :entry.bid])]
+      (and (= ask-state :closed) (= bid-state :closed))))
+
+  (def machine
+    (fsm/machine
+     {:id      :position
+      :initial :none
+      :context nil
+      :states
+      {:none
+       {:on
+        {:tick {:target :entry
+                :guard  entry-orders?
+                }}
+        :exit (fn [& _]
+                (log/info "entry buy/sell positions"))}
+       :entry
+       {:type :parallel
+        :regions
+        {:entry.ask {:initial :open
+                     :states  {:open   {:on {
+                                             :tick {:guard  cancel-order?
+                                                    :target :closed}}}
+                               :closed {:always {:guard  both-closed?
+                                                 :target [:> :none]}}}}
+         :entry.bid {:initial :open
+                     :states  {:open   {:on {:tick {:guard  cancel-order?
+                                                    :target :closed}}}
+                               :closed {:always {:guard  both-closed?
+                                                 :target [:> :none]}}}
+                     }}
+        :exit (fn [& _]
+                (log/info "all position closed"))}}}))
+
+  ;; define the service
+  (def service (fsm/service machine))
+
+  (fsm/start service)
+  (fsm/value service)
+
+  (let [tick  (if/get-best-tick ex)
+        event {:type :tick}]
+    (logging-tick tick)
+    (fsm/send service (merge event tick)))
   )
