@@ -69,51 +69,62 @@
   (defn cancel-order? [_ {:keys [spread-rate]}]
     (> spread-rate spread-cancel))
 
-
   (defn both-closed? [state _]
     (let [ask-state (get-in state [:_state :entry :entry.ask])
           bid-state (get-in state [:_state :entry :entry.bid])]
       (and (= ask-state :closed) (= bid-state :closed))))
 
-  (def machine
-    (fsm/machine
-     {:id      :position
-      :initial :none
-      :context nil
-      :states
-      {:none
-       {:on
-        {:tick {:target :entry
-                :guard  entry-orders?
-                }}
-        :exit (fn [& _]
-                (log/info "entry buy/sell positions"))}
-       :entry
-       {:type :parallel
-        :regions
-        {:entry.ask {:initial :open
-                     :states  {:open   {:on {
-                                             :tick {:guard  cancel-order?
-                                                    :target :closed}}}
-                               :closed {:always {:guard  both-closed?
-                                                 :target [:> :none]}}}}
-         :entry.bid {:initial :open
-                     :states  {:open   {:on {:tick {:guard  cancel-order?
-                                                    :target :closed}}}
-                               :closed {:always {:guard  both-closed?
-                                                 :target [:> :none]}}}
-                     }}
-        :exit (fn [& _]
-                (log/info "all position closed"))}}}))
+  (defn fn-action-logging [message]
+    (fn [& _]
+      (log/info message)))
 
-  ;; define the service
-  (def service (fsm/service machine))
+  (def entry-ask-fsm
+    {:id      :ask
+     :states
+     {:open   {:on {:tick {:guard  cancel-order?
+                           :target :closed}}}
+      :closed {:entry {:guard  both-closed?
+                       :target [:> :none]}}}
+     :initial :open})
 
-  (fsm/start service)
-  (fsm/value service)
+  (def entry-bid-fsm
+    {:id      :bid
+     :states
+     {:open   {:on {:tick {:guard  cancel-order?
+                           :target :closed}}}
+      :closed {:entry {:guard  both-closed?
+                       :target [:> :none]}}}
+     :initial :open})
 
-  (let [tick  (if/get-best-tick ex)
-        event {:type :tick}]
-    (logging-tick tick)
-    (fsm/send service (merge event tick)))
+  (def trade-fsm
+    {:id      :position
+     :initial :none
+     :states
+     {:none
+      {:on
+       {:tick {:target :entry
+               :guard  entry-orders?}}
+       :exit (fn-action-logging "open buy/sell positions")}
+      :entry
+      {:type :parallel
+       :regions
+       {:entry.ask entry-ask-fsm
+        :entry.bid entry-bid-fsm}
+       :exit (fn-action-logging "all position closed")}}})
+
+  (defn init []
+    (let [machine (fsm/machine trade-fsm)
+          service (fsm/service machine)]
+      (fsm/start service)
+      service))
+
+  (def service (init))
+
+  (defn tick! [service]
+    (let [tick  (if/get-best-tick ex)
+          event {:type :tick}]
+      (logging-tick tick)
+      (fsm/send service (merge event tick))))
+  #_(tick! service)
+
   )
