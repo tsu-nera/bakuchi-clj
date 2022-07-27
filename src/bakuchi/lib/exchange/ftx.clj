@@ -24,9 +24,10 @@
       (-> resp ->result))))
 
 (defn- ->private-headers [key timestamp sign]
-  {"FTX-KEY"  key
-   "FTX-TS"   timestamp
-   "FTX-SIGN" sign})
+  {"FTX-KEY"        key
+   "FTX-TS"         timestamp
+   "FTX-SIGN"       sign
+   "FTX-SUBACCOUNT" (:subaccount creds)})
 
 (defn- get-private [path & {:as payload}]
   (let [url       (client/->url base-url path)
@@ -56,7 +57,7 @@
       (-> resp ->result))))
 
 (defrecord FTX
-  [api-key api-secret symbol]
+  [api-key api-secret symbol subaccount]
 
   if/Public
   (fetch-ticker [this]
