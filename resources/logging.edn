@@ -1,0 +1,8 @@
+{:level     "debug"
+ :console   false
+ :appenders [{:appender       :rolling-file
+              :file           "logs/trade.log"
+              :rolling-policy :time-based
+              :encoder        :pattern
+              :pattern        "%d:%p: %m%n"}]
+ :overrides {"org.apache.http" :error}}

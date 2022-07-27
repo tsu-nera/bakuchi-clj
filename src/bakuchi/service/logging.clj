@@ -1,23 +1,16 @@
 (ns bakuchi.service.logging
   (:require
+   [bakuchi.lib.tool :refer [load-edn]]
    [clojure.tools.logging :as log]
    [integrant.core :as ig]
    [unilog.config  :refer [start-logging!]]))
 
-(def logging-pattern "%d:%p: %m%n")
-(def logging-file "logs/trade.log")
-
-(def config-map
-  {:level     "debug"
-   :console   false
-   :appenders [{:appender :file
-                :file     logging-file
-                :encoder  :pattern
-                :pattern  logging-pattern}]
-   :overrides {"org.apache.http" :error}})
+(def config-file "logging.edn")
 
 (defmethod ig/init-key ::logger [_ _]
-  (start-logging! config-map))
+  (-> config-file
+      load-edn
+      start-logging!))
 
 (comment
   (require '[clojure.tools.logging :as log])
