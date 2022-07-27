@@ -1,0 +1,4 @@
+{:lot           0.0001
+ :mm-delta      1
+ :spread-entry  0.0005
+ :spread-cancel 0.0003}

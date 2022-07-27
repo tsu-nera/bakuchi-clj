@@ -2,11 +2,12 @@
   (:require
    [bakuchi.lib.exchange.ftx :refer [ftx] :rename {ftx ex}]
    [bakuchi.lib.exchange.interface :as if]
+   [bakuchi.lib.tool :refer [load-edn]]
    [clojure.tools.logging :as log]
    [statecharts.core :as fsm]))
 
-(def spread-entry 0.005)
-(def spread-cancel 0.003)
+(def config-file "strategy.edn")
+(def config (load-edn config-file))
 
 (defn logging-tick [tick]
   (let [ask         (:ask tick)
@@ -18,10 +19,16 @@
     (log/debug out)))
 
 (defn entry-orders? [_ {:keys [spread-rate]}]
-  (> spread-rate spread-entry))
+  (> spread-rate (:spread-entry config)))
+
+(defn entry-limit-orders! [_ {:keys [ask bid]}]
+  (let [lot   (:lot config)
+        delta (:mm-delta config)]
+    (if/create-limit-order ex "sell" lot (- ask delta))
+    (if/create-limit-order ex "buy" lot (+ bid delta))))
 
 (defn cancel-order? [_ {:keys [spread-rate]}]
-  (> spread-rate spread-cancel))
+  (> spread-rate (:spread-cancel config)))
 
 (defn both-closed? [state _]
   (let [ask-state (get-in state [:_state :entry :entry.ask])
@@ -56,8 +63,9 @@
    :states
    {:none
     {:on
-     {:tick {:target :entry
-             :guard  entry-orders?}}
+     {:tick {:target  :entry
+             :guard   entry-orders?
+             :actions entry-limit-orders!}}
      :exit (fn-action-logging "open buy/sell positions")}
     :entry
     {:type :parallel
