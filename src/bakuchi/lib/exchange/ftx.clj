@@ -101,7 +101,21 @@
     (let [tick (.fetch-ticker this)
           ask  (-> tick :ask)
           bid  (-> tick :bid)]
-      (lib/->best-tick ask bid))))
+      (lib/->best-tick ask bid)))
+  (create-limit-order [this side amount price]
+    (let [market (:symbol this)]
+      (if/create-order this {"market" market
+                             "side"   side
+                             "type"   "limit"
+                             "size"   amount
+                             "price"  price})))
+  (create-market-order [this side amount]
+    (let [market (:symbol this)]
+      (if/create-order this {"market" market
+                             "side"   side
+                             "type"   "market"
+                             "size"   amount
+                             "price"  nil}))))
 
 (def ftx (map->FTX (merge creds {:symbol "BTC/JPY"})))
 
@@ -114,11 +128,8 @@
   (if/fetch-closed-orders ftx)
   (if/fetch-order ftx "166136326482")
 
-  (def resp (if/create-order ftx {"market" "BTC/JPY"
-                                  "side"   "sell"
-                                  "type"   "limit"
-                                  "size"   0.0001
-                                  "price"  2952861.11}))
+  (def resp (if/create-market-order ftx "sell" 0.0001))
+
   (def order-id (:id resp))
   (def resp (if/cancel-order ftx order-id))
 
