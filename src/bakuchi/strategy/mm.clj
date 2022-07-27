@@ -4,7 +4,7 @@
    [bakuchi.lib.exchange.interface :as if]
    [bakuchi.lib.tool :refer [load-edn]]
    [clojure.tools.logging :as log]
-   [statecharts.core :as fsm]))
+   [statecharts.core :as fsm :refer [assign]]))
 
 (def config-file "strategy.edn")
 (def config (load-edn config-file))
@@ -21,11 +21,29 @@
 (defn entry-orders? [_ {:keys [spread-rate]}]
   (> spread-rate (:spread-entry config)))
 
-(defn entry-limit-orders! [_ {:keys [ask bid]}]
+(defn buy-limit-order! [state {:keys [bid]}]
   (let [lot   (:lot config)
         delta (:mm-delta config)]
-    (if/create-limit-order ex "sell" lot (- ask delta))
-    (if/create-limit-order ex "buy" lot (+ bid delta))))
+    (when-let [resp (if/create-limit-order ex "buy" lot (+ bid delta))]
+      (assoc state :bid-id (:id resp)))))
+
+(defn sell-limit-order! [state {:keys [ask]}]
+  (let [lot   (:lot config)
+        delta (:mm-delta config)]
+    (when-let [resp (if/create-limit-order ex "sell" lot (- ask delta))]
+      (assoc state :ask-id (:id resp)))))
+
+(defn- order-closed? [id]
+  (when-let [resp (if/fetch-order ex id)]
+    (= (:status resp) "closed")))
+
+(defn buy-order-closed? [state _]
+  (let [id (:bid-id state)]
+    (order-closed? id)))
+
+(defn sell-order-closed? [state _]
+  (let [id (:ask-id state)]
+    (order-closed? id)))
 
 (defn cancel-order? [_ {:keys [spread-rate]}]
   (> spread-rate (:spread-cancel config)))
@@ -42,19 +60,21 @@
 (def entry-ask-fsm
   {:id      :ask
    :states
-   {:open   {:on {:tick {:guard  cancel-order?
-                         :target :closed}}}
-    :closed {:entry {:guard  both-closed?
-                     :target [:> :none]}}}
+   {:open   {:on   {:tick {:guard  buy-order-closed?
+                           :target :closed}}
+             :exit (fn-action-logging "buy order closed.")}
+    :closed {:always {:guard  both-closed?
+                      :target [:> :none]}}}
    :initial :open})
 
 (def entry-bid-fsm
   {:id      :bid
    :states
-   {:open   {:on {:tick {:guard  cancel-order?
-                         :target :closed}}}
-    :closed {:entry {:guard  both-closed?
-                     :target [:> :none]}}}
+   {:open   {:on   {:tick {:guard  sell-order-closed?
+                           :target :closed}}
+             :exit (fn-action-logging "sell order closed.")}
+    :closed {:always {:guard  both-closed?
+                      :target [:> :none]}}}
    :initial :open})
 
 (def trade-fsm
@@ -65,7 +85,8 @@
     {:on
      {:tick {:target  :entry
              :guard   entry-orders?
-             :actions entry-limit-orders!}}
+             :actions [(assign sell-limit-order!)
+                       (assign buy-limit-order!)]}}
      :exit (fn-action-logging "open buy/sell positions")}
     :entry
     {:type :parallel
