@@ -85,16 +85,20 @@
           path   (str "/api/orders/history?market=" market)]
       (get-private path)))
   ;; https://docs.ftx.com/#get-order-status
-  (fetch-order [this id]
+  (fetch-order [_ id]
     (let [path (str "/api/orders/" id)]
       (get-private path)))
   ;; https://docs.ftx.com/#place-order
-  (create-order [this params]
+  (create-order [_ params]
     (let [path "/api/orders"]
       (post-private path params)))
   ;; https://docs.ftx.com/#cancel-order
-  (cancel-order [this id]
+  (cancel-order [_ id]
     (let [path (str "/api/orders/" id)]
+      (delete-private path)))
+  ;; https://docs.ftx.com/#cancel-all-orders
+  (cancel-all-orders [_]
+    (let [path "/api/orders"]
       (delete-private path)))
 
   if/Library
@@ -129,10 +133,12 @@
   (if/fetch-closed-orders ftx)
   (if/fetch-order ftx "166136326482")
 
-  (def resp (if/create-market-order ftx "sell" 0.0001))
+  (def resp (if/create-market-order ftx "buy" 0.0003))
 
   (def order-id (:id resp))
   (def resp (if/cancel-order ftx order-id))
+
+  (if/cancel-all-orders)
 
   )
 

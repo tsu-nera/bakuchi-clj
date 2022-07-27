@@ -13,10 +13,12 @@
   (fetch-open-orders [this] "未約定の注文一覧を取得")
   (fetch-closed-orders [this] "約定した注文一覧を取得")
   (create-order [this params] "新規注文")
-  (cancel-order [this id] "注文をキャンセル"))
+  (cancel-order [this id] "注文をキャンセル")
+  (cancel-all-orders [this] "全ての注文をキャンセル"))
 
 (defprotocol Library
   (get-best-tick [this] "最良価格を取得")
   (get-eff-tick [this] "実効価格を板情報から計算")
   (create-limit-order [this side amount price] "指値注文")
-  (create-market-order [this side amount] "成行注文"))
+  (create-market-order [this side amount] "成行注文")
+  (modify-order [this id amount price] "注文内容の修正"))
