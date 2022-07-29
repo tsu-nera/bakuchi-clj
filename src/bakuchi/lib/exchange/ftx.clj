@@ -56,6 +56,22 @@
     (when-let [resp (client/delete url {:headers headers})]
       (-> resp ->result))))
 
+(defn calc-effective [orders eff-amount [my-price my-size]]
+  (let [[best-price best-size] (first orders)]
+    (if (> best-size eff-amount)
+      best-price
+      (letfn [(effective? [[eff-price amount] [price size]]
+                (let [remaining (if (= price my-price)
+                                  (- size my-size)
+                                  size)
+                      next-eff  (if (zero? remaining)
+                                  eff-price
+                                  price)
+                      sum       (+ amount remaining)]
+                  (if (> sum eff-amount)
+                    (reduced next-eff) [next-eff sum])))]
+        (reduce effective? [best-price best-size] (rest orders))))))
+
 (defrecord FTX
   [api-key api-secret symbol subaccount]
 
@@ -103,24 +119,43 @@
 
   if/Library
   (get-best-tick [this]
-    (let [tick (.fetch-ticker this)
-          ask  (-> tick :ask)
-          bid  (-> tick :bid)]
-      (lib/->best-tick ask bid)))
-  (create-limit-order [this side amount price]
+    (let [{:keys [bid ask]} (.fetch-ticker this)]
+      (lib/->tick ask bid)))
+  (get-eff-tick [this params]
+    (let [{:keys [eff-amount ask-rate ask-size bid-rate bid-size]
+           :or   {eff-amount 0.01
+                  ask-size   0 ask-rate 0
+                  bid-size   0 bid-rate 0}} params
+          orderbook                         (if/fetch-orderbook this)
+          bids                              (:bids orderbook)
+          asks                              (:asks orderbook)
+          bid
+          (calc-effective bids eff-amount [bid-rate bid-size])
+          ask
+          (calc-effective asks eff-amount [ask-rate ask-size])]
+      (lib/->tick ask bid)))
+  (create-limit-order [this side rate size]
     (let [market (:symbol this)]
       (if/create-order this {"market" market
                              "side"   side
                              "type"   "limit"
-                             "size"   amount
-                             "price"  price})))
-  (create-market-order [this side amount]
+                             "size"   size
+                             "price"  rate})))
+  (create-market-order [this side size]
     (let [market (:symbol this)]
       (if/create-order this {"market" market
                              "side"   side
                              "type"   "market"
-                             "size"   amount
-                             "price"  nil}))))
+                             "size"   size
+                             "price"  nil})))
+
+  ;; https://docs.ftx.com/#modify-order
+  ;; "cancelしてlimit orderしている.  market orderは不可."
+  ;; order-idは新しいものが使われる.
+  (modify-order
+    [this id rate size]
+    (let [path (str "/api/orders/" id "/modify")]
+      (post-private path {"size" size "price" rate}))))
 
 (def ftx (map->FTX (merge creds {:symbol "BTC/JPY"})))
 
@@ -133,15 +168,26 @@
   (if/fetch-closed-orders ftx)
   (if/fetch-order ftx "166136326482")
 
-  (def resp (if/create-market-order ftx "buy" 0.0003))
-
+  (def resp (if/create-limit-order ftx "sell" 0.0001 3133000))
   (def order-id (:id resp))
+
+  (def resp (if/modify-order ftx order-id 0.0002 3133000))
+
   (def resp (if/cancel-order ftx order-id))
 
-  (if/cancel-all-orders)
+  (if/cancel-all-orders ftx)
 
   )
 
 (comment
   (if/get-best-tick ftx)
+
+  (def effective-amount 0.01)
+  (def orderbook (if/fetch-orderbook ftx))
+
+  (def bids (:bids orderbook))
+  (rest bids)
+  (def asks (:asks orderbook))
+
+  (if/get-eff-tick ftx {:eff-amount 0.01})
   )

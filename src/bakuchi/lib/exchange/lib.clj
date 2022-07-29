@@ -6,7 +6,7 @@
 (defn ->spread-rate [ask bid]
   (/ (->spread ask bid) bid))
 
-(defn ->best-tick [ask bid]
+(defn ->tick [ask bid]
   (let [spread      (->spread ask bid)
         spread-rate (->spread-rate ask bid)]
     {:ask ask :bid bid :spread spread :spread-rate spread-rate}))

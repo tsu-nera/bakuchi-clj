@@ -18,7 +18,7 @@
 
 (defprotocol Library
   (get-best-tick [this] "最良価格を取得")
-  (get-eff-tick [this] "実効価格を板情報から計算")
-  (create-limit-order [this side amount price] "指値注文")
-  (create-market-order [this side amount] "成行注文")
-  (modify-order [this id amount price] "注文内容の修正"))
+  (get-eff-tick [this params] "実効価格を板情報から計算")
+  (create-limit-order [this side rate size] "指値注文")
+  (create-market-order [this side size] "成行注文")
+  (modify-order [this id rate size] "注文内容の修正"))

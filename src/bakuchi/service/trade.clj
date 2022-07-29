@@ -36,8 +36,9 @@
 (defmethod ig/init-key ::bot [_ fsm]
   (start fsm))
 
-(defmethod ig/halt-key! ::bot [_ app]
-  (.close app))
+(defmethod ig/halt-key! ::bot [_ trade]
+  (app/stop!)
+  (.close trade))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
