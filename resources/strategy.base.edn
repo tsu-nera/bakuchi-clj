@@ -2,4 +2,5 @@
  :margin-price     0.01
  :spread-entry     0.0005
  :spread-reentry   0.0003
- :effective-amount 0.015}
+ :effective-amount 0.015
+ :post-only        true}

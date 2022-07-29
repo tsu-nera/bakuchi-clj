@@ -17,4 +17,5 @@ pom.xml.asc
 /.cpcache
 
 resources/creds.edn
+resources/strategy.edn
 logs
